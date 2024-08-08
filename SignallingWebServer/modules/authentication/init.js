@@ -40,6 +40,7 @@ function initPassport (app) {
 		saveUninitialized: false,
 		cookie: {
 			secure: true,
+			sameSite: 'none',
 			maxAge: 24 * 60 * 60 * 1000 /* 1 day */
 			//maxAge: 5 * 1000 /* 5 seconds */
 		}
