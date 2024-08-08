@@ -161,8 +161,10 @@ try {
 }
 
 if (config.UseHTTPS) {
-	app.use(helmet());
-
+	app.use(helmet({
+            frameguard: false
+        }));
+	
 	app.use(hsts({
 		maxAge: 15552000  // 180 days in seconds
 	}));
