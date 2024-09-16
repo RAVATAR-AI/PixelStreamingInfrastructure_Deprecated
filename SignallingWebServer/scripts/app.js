@@ -31,6 +31,8 @@ class TwoWayMap {
 /**
  * Frontend logic
  */
+const urlParams = new URLSearchParams(window.location.search);
+
 // Window events for a gamepad connecting
 let haveEvents = 'GamepadEvent' in window;
 let haveWebkitEvents = 'WebKitGamepadEvent' in window;
@@ -50,7 +52,7 @@ let inputController = null;
 let autoPlayAudio = true;
 let qualityController = false;
 let qualityControlOwnershipCheckBox;
-let matchViewportResolution;
+let matchViewportResolution = urlParams.has('matchViewportResolution');
 let VideoEncoderQP = "N/A";
 // TODO: Remove this - workaround because of bug causing UE to crash when switching resolutions too quickly
 let lastTimeResized = new Date().getTime();
