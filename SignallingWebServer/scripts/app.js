@@ -2719,6 +2719,10 @@ function closeStream() {
         webRtcPlayerObj.close();
         webRtcPlayerObj = undefined;
     }
+    
+    if (window.parent) {
+    	window.parent.postMessage("ravatar-session-close", "*");
+    }
 }
 
 function load() {
