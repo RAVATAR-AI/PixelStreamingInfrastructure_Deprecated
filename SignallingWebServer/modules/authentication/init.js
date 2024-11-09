@@ -8,7 +8,8 @@
 const passport = require('passport');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const LocalStrategy = require('passport-local').Strategy;
+const localStrategy = require('./strategies/localStrategy');
+const checkActiveInstanceStrategy = require('./strategies/checkActiveInstanceStrategy');
 const path = require('path');
 const fs = require('fs');
 var db = require('./db');
@@ -61,37 +62,7 @@ function initPassport (app) {
 	});
 
 	console.log('Setting up auth');
-	passport.use(new LocalStrategy(
-		(username, password, callback) => {
-			db.users.findByUsername(username, (err, user) => {
-				if (err) {
-					console.log(`Unable to login '${username}', error ${err}`);
-					return callback(err);
-				}
-			
-				// User not found
-				if (!user) {
-					console.log(`User '${username}' not found`);
-					return callback(null, false);
-				}
-
-				// Always use hashed passwords and fixed time comparison
-				bcrypt.compare(password, user.passwordHash, (err, isValid) => {
-					if (err) {
-						console.log(`Error comparing password for user '${username}': ${err}`);
-						return callback(err);
-					}
-					if (!isValid) {
-						console.log(`Password incorrect for user '${username}'`)
-						return callback(null, false);
-					}
-
-					console.log(`User '${username}' logged in`);
-					return callback(null, user);
-				});
-			})
-		}
-	));
+	passport.use(config.ApiDomain ? checkActiveInstanceStrategy(config) : localStrategy);
 	
 	passport.authenticationMiddleware = function authenticationMiddleware (redirectUrl) {
 		return function (req, res, next) {
