@@ -496,6 +496,8 @@ function webRtcPlayer(parOptions) {
             const stream = await navigator.mediaDevices.getUserMedia({video: false, audio: audioSendOptions});
             if(stream)
             {
+                self.userMediaStream = stream;
+
                 if(hasTransceivers){
                     for(let transceiver of pc.getTransceivers()){
                         if(transceiver && transceiver.receiver && transceiver.receiver.track && transceiver.receiver.track.kind === "audio")
@@ -527,10 +529,26 @@ function webRtcPlayer(parOptions) {
         }
     };
 
+    setUserAudioTracksEnabled = function (enabled) {
+        if (self.userMediaStream) {
+            self.userMediaStream.getAudioTracks().forEach(track => track.enabled = enabled);
+        }    
+    };
+
 
     //**********************
     //Public functions
     //**********************
+
+    this.muteMicrophone = function () {
+        setUserAudioTracksEnabled(false);
+        console.log('Microphone is muted');
+    };
+
+    this.unmuteMicrophone = function () {
+        setUserAudioTracksEnabled(true);
+        console.log('Microphone is unmuted');
+    };
 
     this.setVideoEnabled = function(enabled) {
         self.video.srcObject.getTracks().forEach(track => track.enabled = enabled);
