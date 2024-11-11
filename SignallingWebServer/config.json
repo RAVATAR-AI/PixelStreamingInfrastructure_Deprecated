@@ -16,5 +16,6 @@
 	"StreamerPort": 8888,
 	"SFUPort": 8889,
 	"MaxPlayerCount": -1,
-	"ApiDomain": ""
+	"ApiDomain": "",
+	"LicenseId": ""
 }

@@ -3,7 +3,7 @@ const axios = require('axios');
 
 module.exports = function (config) {
     return new CustomStrategy((req, callback) => {
-        if (config.apiDomain) {
+        if (config.ApiDomain) {
             const token = req.query.token;
             
             if (!token) {
@@ -11,7 +11,7 @@ module.exports = function (config) {
                 return callback(null, false);
             }
 
-            axios.post(`https://${config.ApiDomain}/checkActiveInstance`, { licenseId: config.sessionSecret }, {
+            axios.post(`https://${config.ApiDomain}/checkActiveInstance`, { licenseId: config.LicenseId }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
