@@ -31,7 +31,9 @@ const defaultConfig = {
 	HttpsPort: 443,
 	StreamerPort: 8888,
 	SFUPort: 8889,
-	MaxPlayerCount: -1
+	MaxPlayerCount: -1,
+	LicenseId: "",
+	ApiDomain: ""
 };
 
 const argv = require('yargs').argv;
