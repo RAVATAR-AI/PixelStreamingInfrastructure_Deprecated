@@ -3,6 +3,8 @@ const axios = require('axios');
 
 module.exports = function (config) {
     return new CustomStrategy((req, callback) => {
+        console.log('Checking active instance');
+        
         if (config.ApiDomain) {
             const token = req.query.token;
             
@@ -27,7 +29,7 @@ module.exports = function (config) {
                 })
                 .catch(error => {
                     console.log(`Error during authentication: ${error}`);
-                    return callback(error);
+                    return callback(null, false);
                 });
         } else {
             console.warn('API domain is not set. Skipping authentication');

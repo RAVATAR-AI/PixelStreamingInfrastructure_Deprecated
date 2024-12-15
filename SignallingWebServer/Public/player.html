@@ -275,7 +275,7 @@
 			</div>
 		</div>
 	</div>
-        <script>!function(){function e(){webRtcPlayerObj.video&&!webRtcPlayerObj.video.paused?(window.ravatarSessionStarted=!0,setTimeout(function(){window.parent&&window.parent.postMessage("ravatar-session-start","*")},250)):window.ravatarSessionStarted||setTimeout(e,250)}const t=new URLSearchParams(window.location.search);if("false"===t.get("showOverlay")){window.showTextOverlay=function(){};const n=document.getElementById("overlay");n&&(n.style.display="none")}if("true"===t.get("autoStart")){const o=window.playVideo;window.playVideo=function(){o(),window.ravatarSessionStarted||e()},window.showConnectOverlay=function(){connect(),startAfkWarningTimer()},window.showPlayOverlay=function(){playStream(),shouldShowPlayOverlay=!1}}}();</script>
+  <script>!function(){function e(){webRtcPlayerObj.video&&!webRtcPlayerObj.video.paused?(window.ravatarSessionStarted=!0,setTimeout(function(){window.parent&&window.parent.postMessage("ravatar-session-start","*")},250)):window.ravatarSessionStarted||setTimeout(e,250)}const t=new URLSearchParams(window.location.search);if("false"===t.get("showOverlay")){window.showTextOverlay=function(){};const n=document.getElementById("overlay");n&&(n.style.display="none")}if("true"===t.get("autoStart")){const o=window.playVideo;window.playVideo=function(){o(),window.ravatarSessionStarted||e()},window.showConnectOverlay=function(){connect(),startAfkWarningTimer()},window.showPlayOverlay=function(){playStream(),shouldShowPlayOverlay=!1}}}();</script>
 </body>
 
 </html>

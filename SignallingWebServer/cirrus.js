@@ -64,7 +64,7 @@ var isAuthenticated = redirectUrl => function (req, res, next) { return next(); 
 
 if (config.UseAuthentication && config.UseHTTPS) {
 	var passport = require('passport');
-	require('./modules/authentication').init(app);
+	require('./modules/authentication').init(app, config);
 	// Replace the isAuthenticated with the one setup on passport module
 	isAuthenticated = passport.authenticationMiddleware ? passport.authenticationMiddleware : isAuthenticated
 } else if (config.UseAuthentication && !config.UseHTTPS) {
@@ -196,8 +196,16 @@ sendGameSessionData();
 //Setup the login page if we are using authentication
 if(config.UseAuthentication){
 	if(config.EnableWebserver) {
-		app.get('/login', function(req, res){
-			res.sendFile(__dirname + '/login.htm');
+		app.get('/login', function(req, res) {
+			if (config.ApiDomain) {
+				return res.redirect('/forbidden');
+			}
+
+			res.sendFile(__dirname + '/Public/login.html');
+		});
+
+		app.get('/forbidden', function(req, res){
+			res.sendFile(__dirname + '/Public/forbidden.html');
 		});
 	}
 

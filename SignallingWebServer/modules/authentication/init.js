@@ -14,29 +14,31 @@ const path = require('path');
 const fs = require('fs');
 var db = require('./db');
 
-function initPassport (app) {
+function initPassport (app, config) {
+	config = config || {};
 
 	// Generate session secret if it doesn't already exist and save it to file for use next time
-	let config = {};
+	let authConfig = {};
 	let configPath = path.join(__dirname, './config.json');
+
 	if (fs.existsSync(configPath)) {
 		let content = fs.readFileSync(configPath, 'utf8');
 		try {
-			config = JSON.parse(content);
+			authConfig = JSON.parse(content);
 		} catch (e) {
 			console.log(`Error with config file '${configPath}': ${e}`);
 		}
 	}
 
-	if(!config.sessionSecret){
-		config.sessionSecret = bcrypt.genSaltSync(12);
-		let content = JSON.stringify(config);
+	if (!authConfig.sessionSecret) {
+		authConfig.sessionSecret = bcrypt.genSaltSync(12);
+		let content = JSON.stringify(authConfig);
 		fs.writeFileSync(configPath, content);
 	}
 
 	// Setup session id settings
 	app.use(session({
-		secret: config.sessionSecret,
+		secret: authConfig.sessionSecret,
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
@@ -62,18 +64,24 @@ function initPassport (app) {
 	});
 
 	console.log('Setting up auth');
-	passport.use(config.ApiDomain ? checkActiveInstanceStrategy(config) : localStrategy);
-	
-	passport.authenticationMiddleware = function authenticationMiddleware (redirectUrl) {
-		return function (req, res, next) {
-		    if (req.isAuthenticated()) {
-		      return next();
-		    }
 
-		    // Set redirectTo property so that user can be redirected back there after logging in
-		    //console.log(`Original request path '${req.originalUrl}'`);
-		    req.session.redirectTo = req.originalUrl;
-		    res.redirect(redirectUrl);
+	if (config.ApiDomain) {
+		console.log('Using custom auth strategy');
+		passport.use('custom', checkActiveInstanceStrategy(config));
+	} else {
+		console.log('Using local auth strategy');
+		passport.use(localStrategy);
+	}
+	
+	
+	passport.authenticationMiddleware = function authenticationMiddleware(redirectUrl) {
+		return function(req, res, next) {
+			if (req.isAuthenticated()) {
+				return next();
+			}
+			console.log("authenticate");
+			req.session.redirectTo = req.originalUrl;
+			return passport.authenticate('custom', { failureRedirect: redirectUrl })(req, res, next);
 		}
 	}
 }

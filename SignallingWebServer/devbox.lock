@@ -1,0 +1,12 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "nodejs@16.4.2": {
+      "last_modified": "2021-07-07T11:28:43Z",
+      "plugin_version": "0.0.2",
+      "resolved": "github:NixOS/nixpkgs/4c0834929cafb7478a5e82616d484578a80a3e41#nodejs-16_x",
+      "source": "devbox-search",
+      "version": "16.4.2"
+    }
+  }
+}
