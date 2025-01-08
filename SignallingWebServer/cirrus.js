@@ -230,7 +230,7 @@ if(config.EnableWebserver) {
 	//Setup folders
 	app.use(express.static(path.join(__dirname, '/Public')))
 	app.use('/images', express.static(path.join(__dirname, './images')))
-	app.use('/scripts', [isAuthenticated('/login'),express.static(path.join(__dirname, '/scripts'))]);
+	app.use('/scripts', express.static(path.join(__dirname, '/scripts'));
 	app.use('/', [isAuthenticated('/login'), express.static(path.join(__dirname, '/custom_html'))])
 }
 
