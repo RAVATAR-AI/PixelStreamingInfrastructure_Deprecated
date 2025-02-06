@@ -1,4 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+// Modifications made by RAVATAR in 2025.
 
 /**
  * Class definitions
@@ -2533,86 +2534,97 @@ function connect() {
         return;
     }
 
-    // Make a new websocket connection
-    let connectionUrl = window.location.href.replace('http://', 'ws://').replace('https://', 'wss://');
-    console.log(`Creating a websocket connection to: ${connectionUrl}`);
-    ws = new WebSocket(connectionUrl);
-    ws.attemptStreamReconnection = true;
+    let reconnectAttempt = 0;
+    const maxReconnectAttempts = 3;
 
-    ws.onmessagebinary = function(event) {
-        if(!event || !event.data) { return; }
-
-        event.data.text().then(function(messageString){
-            // send the new stringified event back into `onmessage`
-            ws.onmessage({ data: messageString });
-        }).catch(function(error){
-            console.error(`Failed to parse binary blob from websocket, reason: ${error}`);
-        });
+    function attemptReconnect() {
+        reconnectAttempt++;
+        if (reconnectAttempt <= maxReconnectAttempts) {
+            console.log(`Attempting reconnection (${reconnectAttempt}/${maxReconnectAttempts})...`);
+            setTimeout(() => {
+                createWebSocketConnection();
+            }, 2000);
+        } else {
+            ws.attemptStreamReconnection = false;
+            console.log("Max reconnection attempts reached. Giving up.");
+        }
     }
 
-    ws.onmessage = function(event) {
+    function createWebSocketConnection() {
+        // Make a new websocket connection
+        let connectionUrl = window.location.href.replace('http://', 'ws://').replace('https://', 'wss://');
+        console.log(`Creating a websocket connection to: ${connectionUrl}`);
+        ws = new WebSocket(connectionUrl);
+        ws.attemptStreamReconnection = true;
 
-        // Check if websocket message is binary, if so, stringify it.
-        if(event.data && event.data instanceof Blob) {
-            ws.onmessagebinary(event);
-            return;
+        ws.onmessagebinary = function(event) {
+            if(!event || !event.data) { return; }
+
+            event.data.text().then(function(messageString){
+                ws.onmessage({ data: messageString });
+            }).catch(function(error){
+                console.error(`Failed to parse binary blob from websocket, reason: ${error}`);
+            });
         }
 
-        let msg = JSON.parse(event.data);
-        if (msg.type === 'config') {
-            console.log("%c[Inbound SS (config)]", "background: lightblue; color: black", msg);
-            onConfig(msg);
-        } else if (msg.type === 'playerCount') {
-            console.log("%c[Inbound SS (playerCount)]", "background: lightblue; color: black", msg);
-        } else if (msg.type === 'offer') {
-            console.log("%c[Inbound SS (offer)]", "background: lightblue; color: black", msg);
-            if (!UrlParamsCheck('offerToReceive')) {
-                onWebRtcOffer(msg);
+        ws.onmessage = function(event) {
+
+            // Check if websocket message is binary, if so, stringify it.
+            if(event.data && event.data instanceof Blob) {
+                ws.onmessagebinary(event);
+                return;
             }
-        } else if (msg.type === 'answer') {
-            console.log("%c[Inbound SS (answer)]", "background: lightblue; color: black", msg);
-            onWebRtcAnswer(msg);
-        } else if (msg.type === 'iceCandidate') {
-            onWebRtcIce(msg.candidate);
-        } else if(msg.type === 'warning' && msg.warning) {
-            console.warn(msg.warning);
-        } else if (msg.type === 'peerDataChannels') {
-            onWebRtcSFUPeerDatachannels(msg);
-        } else {
-            console.error("Invalid SS message type", msg.type);
-        }
-    };
 
-    ws.onerror = function(event) {
-        console.log(`WS error: ${JSON.stringify(event)}`);
-    };
-
-    ws.onclose = function(event) {
-
-        closeStream();
-
-        if(ws.attemptStreamReconnection === true){
-            console.log(`WS closed: ${JSON.stringify(event.code)} - ${event.reason}`);
-            if(event.reason !== "")
-            {
-                showTextOverlay(`DISCONNECTED: ${event.reason.toUpperCase()}`);
+            let msg = JSON.parse(event.data);
+            if (msg.type === 'config') {
+                console.log("%c[Inbound SS (config)]", "background: lightblue; color: black", msg);
+                onConfig(msg);
+            } else if (msg.type === 'playerCount') {
+                console.log("%c[Inbound SS (playerCount)]", "background: lightblue; color: black", msg);
+            } else if (msg.type === 'offer') {
+                console.log("%c[Inbound SS (offer)]", "background: lightblue; color: black", msg);
+                if (!UrlParamsCheck('offerToReceive')) {
+                    onWebRtcOffer(msg);
+                }
+            } else if (msg.type === 'answer') {
+                console.log("%c[Inbound SS (answer)]", "background: lightblue; color: black", msg);
+                onWebRtcAnswer(msg);
+                ws.attemptStreamReconnection = false;
+            } else if (msg.type === 'iceCandidate') {
+                onWebRtcIce(msg.candidate);
+            } else if(msg.type === 'warning' && msg.warning) {
+                console.warn(msg.warning);
+            } else if (msg.type === 'peerDataChannels') {
+                onWebRtcSFUPeerDatachannels(msg);
+            } else {
+                console.error("Invalid SS message type", msg.type);
             }
-            else
-            {
-                showTextOverlay(`DISCONNECTED`);
+        };
+
+        ws.onerror = function(event) {
+            console.log(`WS error: ${JSON.stringify(event)}`);
+        };
+
+        ws.onclose = function(event) {
+            closeStream(ws.attemptStreamReconnection);
+
+            if(ws.attemptStreamReconnection === true) {
+                console.log(`WS closed: ${JSON.stringify(event.code)} - ${event.reason}`);
+                
+                if (event.reason !== "") {
+                    showTextOverlay(`DISCONNECTED: ${event.reason.toUpperCase()}`);
+                } else {
+                    showTextOverlay(`DISCONNECTED`);
+                }
+                
+                attemptReconnect();
             }
-            
+        };
+    }
 
-            let reclickToStart = setTimeout(function(){
-                start(true)
-            }, 4000);
-        }
-
-        ws = undefined;
-    };
+    createWebSocketConnection();
 }
 
-// Config data received from WebRTC sender via the Cirrus web server
 function onConfig(config) {
     let playerDiv = document.getElementById('player');
     let playerElement = setupWebRtcPlayer(playerDiv, config);
@@ -2701,8 +2713,9 @@ function restartStream() {
     ws.close();
 }
 
-function closeStream() {
+function closeStream(attemptStreamReconnection) {
     console.log("----------------------Closing stream----------------------")
+
     if (webRtcPlayerObj) {
         // Remove video element from the page.
         let playerDiv = document.getElementById('player');
@@ -2721,9 +2734,9 @@ function closeStream() {
         webRtcPlayerObj.close();
         webRtcPlayerObj = undefined;
     }
-    
-    if (window.parent) {
-    	window.parent.postMessage("ravatar-session-close", "*");
+
+    if (!attemptStreamReconnection && window.parent) {
+        window.parent.postMessage("ravatar-session-close", "*");
     }
 }
 
